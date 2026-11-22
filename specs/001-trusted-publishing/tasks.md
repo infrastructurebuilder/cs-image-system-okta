@@ -16,6 +16,9 @@ the operator's.
 | T004 | `docs/RELEASING.md`: how a release is cut and published; the trust on PyPI, TestPyPI and GitHub, field by field; how to check it and read `invalid-publisher`; a fork: the distribution name and `NAMES`, the workflow's repository, a pending publisher on each index, the environments, and what a new name changes (the namespace, the installation) |
 | T005 | The README's "Releasing" and "Documents" and the Justfile's `release` comment say that pushing the tag publishes and link `docs/RELEASING.md` |
 | T006 | `just test`: ruff clean, REUSE compliant, pyright 0 errors, the surface check, 188 passed; `publish.yml` parses; `just public-safe` clean over 220 files |
+| T008 | 2026-11-22, at the operator's word: `feature/008-trusted-publishing` committed as `084e4bd` and squash-merged into `develop` as `af89e82` (branch kept, pushed); CI on `develop`, [45035158800](https://github.com/infrastructurebuilder/cs-image-system-okta/actions/runs/45035158800), passed: 188 passed, pyright 0 errors, public-safe clean. Then `docs/RELEASING.md` told the index project (`cs-image-system-okta-opa-plugin`) and the repository (`cs-image-system-okta`) apart, the first setup having looked for the repository's name on PyPI: `feature/001-releasing-names`, `c41ba19`, squash-merged as `314c4e5`; CI [45040114558](https://github.com/infrastructurebuilder/cs-image-system-okta/actions/runs/45040114558) passed |
+| T010 | 2026-11-22, the first attempt: `v0.2.0` tagged on `314c4e5` and pushed; the Publish run [45040609873](https://github.com/infrastructurebuilder/cs-image-system-okta/actions/runs/45040609873) built both files and stopped at TestPyPI before reaching it: `uv publish` refuses `--index` with `--check-url` (exit 2). Nothing reached either index (neither lists 0.2.0). T012 fixes the workflow |
+| T012 | The publish lines drop `--check-url` (`--index` already checks the index it publishes to; `docs/RELEASING.md` and the plan say so); `tests/tooling/test_publish_commands_parse.py` runs every `uv publish` line of the workflow in uv's offline mode over a stand-in file, where uv refuses to publish only after it has parsed the line, so a line it would refuse fails the test, with nothing sent anywhere. Branch `feature/001-publish-index-only` |
 | T007 | Spec Kit set up in this repository the same day, on this branch (`specify init --here --integration claude --script py`, 1.2.3, as cs-image-system-3's): its constitution 1.0.0, derived from cs-image-system's 1.2.0; `.claude/CLAUDE.md`; Spec Kit's files under MIT in `REUSE.toml` (`LICENSES/MIT.txt`) |
 
 ## Phase 1: Built
@@ -30,7 +33,8 @@ the operator's.
 
 ## Phase 2: The operator's
 
-- [ ] T008 Commit this branch, squash-merge it into `develop` (branch kept) and push; the CI run on `develop` passes
+- [X] T008 Commit this branch, squash-merge it into `develop` (branch kept) and push; the CI run on `develop` passes
 - [ ] T009 Register the trusted publishers on PyPI and TestPyPI and create the `testpypi` and `pypi` environments (quickstart step 2; `docs/RELEASING.md`)
 - [ ] T010 **RELEASE**: walk quickstart steps 1 and 3 for 0.2.0; record the run and both indexes' answer (SC-001); record in cs-image-system-3's spec 008, T034, that 0.2.0 was published by the tag's push
+- [X] T012 Drop `--check-url` from the publish lines in `.github/workflows/publish.yml` and test every publish line parses in `tests/tooling/test_publish_commands_parse.py` (found by T010's first attempt)
 - [ ] T011 Run `/speckit-converge`; then set the status line of `spec.md` and the row in `specs/README.md` to complete, with the date

@@ -32,8 +32,9 @@ changes nothing.
 - **A token in the environment** (`UV_PUBLISH_TOKEN`, or `PYPI_TOKEN` /
   `TEST_PYPI_TOKEN` for the index named): the script uploads to the index
   named itself, before tagging. The workflow still runs on the tag's push,
-  finds those files already on the index and skips them
-  (`uv publish --check-url`), and uploads only what is missing.
+  finds those files already on the index and skips them (`uv publish
+  --index` checks the index it publishes to), and uploads only what is
+  missing.
 
 Either way, a version either index has ever listed is refused before
 anything changes. An index never takes a second build under a version it

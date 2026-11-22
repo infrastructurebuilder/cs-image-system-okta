@@ -14,8 +14,8 @@ up, and what a fork changes.
 ## Technical Context
 
 **Language/Version**: Python 3.13; GitHub Actions YAML
-**Primary Dependencies**: uv (`uv publish --trusted-publishing always`,
-`--check-url`), `actions/checkout@v5`, `astral-sh/setup-uv@v7`,
+**Primary Dependencies**: uv (`uv publish --trusted-publishing always
+--index <name>`, which checks the index for files it already holds), `actions/checkout@v5`, `astral-sh/setup-uv@v7`,
 `actions/upload-artifact@v7` and `actions/download-artifact@v8` (all on
 Node 24)
 **Testing**: pytest under the strict session; `tests/tooling` holds the
