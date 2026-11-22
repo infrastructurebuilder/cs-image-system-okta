@@ -45,18 +45,36 @@ This is done once per index, by someone who is an **Owner** of the project on
 that index. It needs no change to the repository: the workflow is already
 written for it.
 
+**Two names, not to be mixed up.** The project on each index is named after
+the package, **`cs-image-system-okta-opa-plugin`**
+([pypi.org](https://pypi.org/project/cs-image-system-okta-opa-plugin/),
+[test.pypi.org](https://test.pypi.org/project/cs-image-system-okta-opa-plugin/)).
+The repository on GitHub is **`cs-image-system-okta`**. There is no index
+project called `cs-image-system-okta`. The project is where the publisher is
+added; the repository's name is what the publisher form asks for.
+
+| Name | What it is | Where it is used below |
+| --- | --- | --- |
+| `cs-image-system-okta-opa-plugin` | the project on PyPI and TestPyPI (`[project] name` in `packages/okta-opa-plugin/pyproject.toml`) | the project you open to add the publisher |
+| `cs-image-system-okta` | the GitHub repository, under the owner `infrastructurebuilder` | the form's **Repository name** field |
+
+If `cs-image-system-okta-opa-plugin` is not under **Your projects**, the
+account signed in is not one of its owners; the publisher is added from an
+account that is.
+
 ### 1. On PyPI
 
 1. Sign in to [pypi.org](https://pypi.org) as an Owner of
    `cs-image-system-okta-opa-plugin`.
-2. Open **Your projects**, find the project, and choose **Manage**.
+2. Open **Your projects**, find `cs-image-system-okta-opa-plugin` (not
+   `cs-image-system-okta`, which is the repository), and choose **Manage**.
 3. Choose **Publishing** in the project's menu.
 4. Under **Add a new publisher**, choose the **GitHub** tab and fill in:
 
    | Field | Value |
    | --- | --- |
    | Owner | `infrastructurebuilder` |
-   | Repository name | `cs-image-system-okta` |
+   | Repository name | `cs-image-system-okta` (the GitHub repository, not the project) |
    | Workflow name | `publish.yml` |
    | Environment name | `pypi` |
 
@@ -65,7 +83,8 @@ written for it.
 ### 2. On TestPyPI
 
 TestPyPI is a separate site with its own accounts and its own trust. Do the
-same at [test.pypi.org](https://test.pypi.org), with one difference:
+same at [test.pypi.org](https://test.pypi.org), in the same project,
+`cs-image-system-okta-opa-plugin`, with one difference:
 
 | Field | Value |
 | --- | --- |
