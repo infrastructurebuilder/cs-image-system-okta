@@ -635,7 +635,7 @@ test = [
 requires-dist = [
     { name = "cryptography", specifier = ">=49.0" },
     { name = "cs-image-system-base", specifier = ">=0.2,<0.3" },
-    { name = "cs-image-system-contract", specifier = ">=0.5,<0.6" },
+    { name = "cs-image-system-contract", specifier = ">=0.5,<0.7" },
     { name = "cs-image-system-hashicorp-utils", specifier = ">=0.2,<0.3" },
     { name = "cs-image-system-system", extras = ["testing"], marker = "extra == 'test'", specifier = ">=0.1.11,<0.2" },
     { name = "cs-image-system-tofu-roots", specifier = ">=0.2,<0.3" },
