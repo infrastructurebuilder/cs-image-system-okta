@@ -5,19 +5,27 @@
 
 """Cut a release of the Okta plugin: `just release <part|version> [test|pypi] [yes]`.
 
+A release is published one of two ways. The usual one is trusted publishing:
+this script tags the version, the operator pushes the tag, and the `Publish`
+workflow (.github/workflows/publish.yml) uploads it to TestPyPI and then, for a
+final version, PyPI, with no token anywhere (docs/RELEASING.md). With an
+upload token in the environment (UV_PUBLISH_TOKEN, or TEST_PYPI_TOKEN /
+PYPI_TOKEN for the index named), this script uploads to that index itself
+first; the workflow then finds those files there and skips them.
+
 One distribution, cs-image-system-okta-opa-plugin, on its own line from
 0.2.0 (its 0.1.x were released from cs-image-system-3). In order, and
 nothing changes before the first step that changes something:
 
 1. the probes: a clean checkout (the real form), the new version from the
    part (bump-my-version's major/minor/patch) or written out, no local tag
-   v<version>, and NO version the index has ever listed for the plugin's
-   name (an index never takes a second build under a version it held, and a
-   deleted version is never cut again); the upload token is present;
+   v<version>, and NO version either index (TestPyPI, PyPI) has ever listed
+   for the plugin's name (an index never takes a second build under a version
+   it held, and a deleted version is never cut again);
 2. `yes` stops here, saying the plan;
 3. the bump (the plugin's manifest and the root; none for the version the
    manifests already carry, as the line's first release does), `uv lock`, `just full-test`;
-4. the build, and its upload to the index named;
+4. the build, and, with a token, its upload to the index named;
 5. the commit `release <version>` and the annotated tag v<version>.
 
 A failure after the bump leaves it uncommitted and says how to put it back.
@@ -109,18 +117,20 @@ def release(part: str, index: str, dry: bool) -> int:
     version = new_version(part)
     if sh("git", "tag", "--list", f"v{version}", capture=True).stdout.strip():
         raise Refused(f"v{version} is already tagged here -- a version is never cut twice; nothing was changed")
-    already = held(version, index)
-    if already:
-        raise Refused(f"{index} already lists {version} for {', '.join(already)} -- an index never takes a second "
-                      f"build under a version it held; choose another; nothing was changed")
+    for each in INDEXES:      # the tag's push publishes to both, so a version either ever held is refused
+        already = held(version, each)
+        if already:
+            raise Refused(f"{each} already lists {version} for {', '.join(already)} -- an index never takes a second "
+                          f"build under a version it held; choose another; nothing was changed")
     index_name, _url, token_var = INDEXES[index]
     token = os.environ.get("UV_PUBLISH_TOKEN") or os.environ.get(token_var)
-    if not token:
-        raise Refused(f"no upload token (UV_PUBLISH_TOKEN or {token_var}) -- nothing was changed")
-    say(f"{current} -> {version} on {index_name}: free there, untagged, token present")
+    how = (f"uploaded to {index_name} from here (a token is present)" if token else
+           "published by the tag's push (no token here: the Publish workflow, by trusted publishing)")
+    say(f"{current} -> {version}: free on both indexes, untagged; {how}")
     if dry:
+        upload = f"uv publish --index {index_name}, " if token else ""
         say(f"dry -- the real form: bump-my-version to {version}, uv lock, just full-test, uv build, "
-            f"uv publish --index {index_name}, commit 'release {version}', tag v{version}; nothing was changed")
+            f"{upload}commit 'release {version}', tag v{version}; nothing was changed")
         return 0
     if version != current:      # the line's first release is cut at the number the manifests already carry
         sh("uv", "run", "--no-sync", "bump-my-version", "bump", "--new-version", version)
@@ -130,21 +140,27 @@ def release(part: str, index: str, dry: bool) -> int:
         sh("just", "full-test")
         shutil.rmtree(ROOT / "dist", ignore_errors=True)
         sh("uv", "build", "--all-packages")
-        files = sorted(str(p) for p in (ROOT / "dist").iterdir() if version in p.name)
-        env_token = {"UV_PUBLISH_TOKEN": token}
-        done = subprocess.run(["uv", "publish", "--index", index_name, *files], cwd=ROOT,
-                              env={**{k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}, **env_token})
-        if done.returncode != 0:
-            raise Refused(f"the upload failed (exit {done.returncode}); the bump is uncommitted -- run "
-                          f"`uv publish --index {index_name} dist/*{version}*` again, or put the bump back: {undo}")
+        if token:
+            files = sorted(str(p) for p in (ROOT / "dist").iterdir() if version in p.name)
+            env_token = {"UV_PUBLISH_TOKEN": token}
+            done = subprocess.run(["uv", "publish", "--index", index_name, *files], cwd=ROOT,
+                                  env={**{k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}, **env_token})
+            if done.returncode != 0:
+                raise Refused(f"the upload failed (exit {done.returncode}); the bump is uncommitted -- run "
+                              f"`uv publish --index {index_name} dist/*{version}*` again, or put the bump back: {undo}")
     except Refused as e:
         raise Refused(f"{e} (the bump to {version} is uncommitted: {undo})") from None
     # the line's first release bumps nothing, so there may be nothing to commit: the tag marks HEAD either way
     if sh("git", "status", "--porcelain", "--untracked-files=no", capture=True).stdout.strip():
         sh("git", "commit", "-q", "-am", f"release {version}")
     sh("git", "tag", "-a", f"v{version}", "-m", f"release {version}")
-    say(f"{version} is on {index_name}, committed and tagged v{version}; push it: "
-        f"git push origin HEAD v{version}")
+    if token:
+        say(f"{version} is on {index_name}, committed and tagged v{version}; push it: git push origin HEAD v{version} "
+            "(the Publish workflow then checks it there and uploads what is missing)")
+    else:
+        say(f"{version} passed full-test and is committed and tagged v{version}; nothing was uploaded from here. "
+            f"Push it to publish: git push origin HEAD v{version} (the Publish workflow uploads it by trusted "
+            "publishing: TestPyPI, then PyPI for a final version)")
     return 0
 
 

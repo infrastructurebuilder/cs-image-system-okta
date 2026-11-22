@@ -33,10 +33,12 @@ full-test: test
 	uv run --no-sync python scripts/full-test-legs
 
 # Cut a release of the plugin: PART is a bump-my-version part (major, minor,
-# patch) or an explicit version; INDEX is `test` (TestPyPI) or `pypi`. It moves the
-# plugin's number, runs `full-test`, builds, refuses a version the index ever held,
-# publishes, then commits and tags v<version>.
-# `yes` as the third argument is the dry form: the plan, nothing changed.
+# patch) or an explicit version; INDEX is `test` (TestPyPI) or `pypi`, the index an
+# upload token in the environment uploads to (none needed: see below). It refuses a
+# version either index ever held, moves the plugin's number, runs `full-test`, builds,
+# then commits and tags v<version>. Pushing the tag publishes it (the Publish workflow,
+# by trusted publishing: docs/RELEASING.md). `yes` as the third argument is the dry
+# form: the plan, nothing changed.
 release part index="test" dry="no": init
 	uv run --no-sync python scripts/release "{{part}}" "{{index}}" "{{dry}}"
 
