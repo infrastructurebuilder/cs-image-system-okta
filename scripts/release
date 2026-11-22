@@ -1,0 +1,161 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Mykel Alvis <mykelalvis@infrastructurebuilder.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+"""Cut a release of the Okta plugin: `just release <part|version> [test|pypi] [yes]`.
+
+One distribution, cs-image-system-okta-opa-plugin, on its own line from
+0.2.0 (its 0.1.x were released from cs-image-system-3). In order, and
+nothing changes before the first step that changes something:
+
+1. the probes: a clean checkout (the real form), the new version from the
+   part (bump-my-version's major/minor/patch) or written out, no local tag
+   v<version>, and NO version the index has ever listed for the plugin's
+   name (an index never takes a second build under a version it held, and a
+   deleted version is never cut again); the upload token is present;
+2. `yes` stops here, saying the plan;
+3. the bump (the plugin's manifest and the root; none for the version the
+   manifests already carry, as the line's first release does), `uv lock`, `just full-test`;
+4. the build, and its upload to the index named;
+5. the commit `release <version>` and the annotated tag v<version>.
+
+A failure after the bump leaves it uncommitted and says how to put it back.
+The pushes are the operator's: the closing line names them.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+from collections.abc import Callable
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+NAMES = ("cs-image-system-okta-opa-plugin",)
+INDEXES = {"test": ("testpypi", "https://test.pypi.org/pypi/{name}/json", "TEST_PYPI_TOKEN"),
+           "pypi": ("pypi", "https://pypi.org/pypi/{name}/json", "PYPI_TOKEN")}
+VERSION = re.compile(r"^\d+\.\d+\.\d+$")
+
+
+class Refused(Exception):
+    """A probe said no; nothing was changed."""
+
+
+def say(line: str) -> None:
+    print(f"release: {line}", flush=True)
+
+
+def listed_versions(name: str, url: str, fetch: Callable[[str], bytes | None]) -> set[str]:
+    """Every version the index lists for ``name`` (an empty set for a name it
+    does not know)."""
+    body = fetch(url.format(name=name))
+    return set(json.loads(body).get("releases", {})) if body else set()
+
+
+def http_fetch(url: str) -> bytes | None:
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r:
+            return r.read()
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise Refused(f"the index could not be asked ({url}: HTTP {e.code}) -- nothing is guessed") from e
+    except OSError as e:
+        raise Refused(f"the index could not be asked ({url}: {e}) -- nothing is guessed") from e
+
+
+def held(version: str, index: str, fetch: Callable[[str], bytes | None] = http_fetch) -> list[str]:
+    """The names among the plugin's (one) that the index ``index`` already
+    lists under ``version``."""
+    _name, url, _token = INDEXES[index]
+    return [n for n in NAMES if version in listed_versions(n, url, fetch)]
+
+
+def sh(*cmd: str, check: bool = True, capture: bool = False) -> subprocess.CompletedProcess:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    done = subprocess.run(cmd, cwd=ROOT, env=env, text=True, capture_output=capture)
+    if check and done.returncode != 0:
+        raise Refused(f"`{' '.join(cmd)}` failed (exit {done.returncode})" + (f": {done.stderr.strip()}" if capture else ""))
+    return done
+
+
+def new_version(part: str) -> str:
+    if VERSION.match(part):
+        return part
+    if part not in ("major", "minor", "patch"):
+        raise Refused(f"{part!r} is neither a part (major, minor, patch) nor a version like 0.2.1")
+    return sh("uv", "run", "--no-sync", "bump-my-version", "show", "--increment", part, "new_version",
+              capture=True).stdout.strip()
+
+
+def release(part: str, index: str, dry: bool) -> int:
+    if index not in INDEXES:
+        raise Refused(f"the index is `test` or `pypi`, not {index!r}")
+    if not dry:
+        # a change to a tracked file, or anything untracked inside a package (a build would take it), refuses;
+        # an untracked file outside the packages (an editor's or an agent's own) is no part of a release
+        lines = sh("git", "status", "--porcelain", capture=True).stdout.splitlines()
+        dirty = [ln for ln in lines if not ln.startswith("?? ") or ln[3:].startswith("packages/")]
+        if dirty:
+            raise Refused("the checkout has uncommitted changes (" + ", ".join(ln[3:] for ln in dirty[:5])
+                          + ") -- commit or put them back first; nothing was changed")
+    current = sh("uv", "run", "--no-sync", "bump-my-version", "show", "current_version", capture=True).stdout.strip()
+    version = new_version(part)
+    if sh("git", "tag", "--list", f"v{version}", capture=True).stdout.strip():
+        raise Refused(f"v{version} is already tagged here -- a version is never cut twice; nothing was changed")
+    already = held(version, index)
+    if already:
+        raise Refused(f"{index} already lists {version} for {', '.join(already)} -- an index never takes a second "
+                      f"build under a version it held; choose another; nothing was changed")
+    index_name, _url, token_var = INDEXES[index]
+    token = os.environ.get("UV_PUBLISH_TOKEN") or os.environ.get(token_var)
+    if not token:
+        raise Refused(f"no upload token (UV_PUBLISH_TOKEN or {token_var}) -- nothing was changed")
+    say(f"{current} -> {version} on {index_name}: free there, untagged, token present")
+    if dry:
+        say(f"dry -- the real form: bump-my-version to {version}, uv lock, just full-test, uv build, "
+            f"uv publish --index {index_name}, commit 'release {version}', tag v{version}; nothing was changed")
+        return 0
+    if version != current:      # the line's first release is cut at the number the manifests already carry
+        sh("uv", "run", "--no-sync", "bump-my-version", "bump", "--new-version", version)
+    undo = "git checkout -- pyproject.toml packages/*/pyproject.toml uv.lock"
+    try:
+        sh("uv", "lock")
+        sh("just", "full-test")
+        shutil.rmtree(ROOT / "dist", ignore_errors=True)
+        sh("uv", "build", "--all-packages")
+        files = sorted(str(p) for p in (ROOT / "dist").iterdir() if version in p.name)
+        env_token = {"UV_PUBLISH_TOKEN": token}
+        done = subprocess.run(["uv", "publish", "--index", index_name, *files], cwd=ROOT,
+                              env={**{k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}, **env_token})
+        if done.returncode != 0:
+            raise Refused(f"the upload failed (exit {done.returncode}); the bump is uncommitted -- run "
+                          f"`uv publish --index {index_name} dist/*{version}*` again, or put the bump back: {undo}")
+    except Refused as e:
+        raise Refused(f"{e} (the bump to {version} is uncommitted: {undo})") from None
+    # the line's first release bumps nothing, so there may be nothing to commit: the tag marks HEAD either way
+    if sh("git", "status", "--porcelain", "--untracked-files=no", capture=True).stdout.strip():
+        sh("git", "commit", "-q", "-am", f"release {version}")
+    sh("git", "tag", "-a", f"v{version}", "-m", f"release {version}")
+    say(f"{version} is on {index_name}, committed and tagged v{version}; push it: "
+        f"git push origin HEAD v{version}")
+    return 0
+
+
+def main(argv: list[str]) -> int:
+    part, index, dry = (argv + ["", "test", "no"])[:3]
+    try:
+        return release(part, index, dry == "yes")
+    except Refused as e:
+        say(str(e))
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

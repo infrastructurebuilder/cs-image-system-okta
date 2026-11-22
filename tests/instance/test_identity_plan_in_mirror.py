@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tests.harness import FixtureRun
+from harness import FixtureRun
 
 
 def _plans(journal: list[str]) -> list[str]:

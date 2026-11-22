@@ -1,0 +1,41 @@
+instances:
+  test:
+    build: unbound
+    enrollment:
+      enrollment: sftd-token
+      server_label: sftd.tx.group=coops
+    ephemeral: false
+    group: coops
+    hostname: test-001
+    identity_type: okta
+    image: imgfile-basic-cloudflow
+    launched: false
+    machine_type: t3.medium
+    mounts: []
+    run: 2026_08_26t12_00_00
+    session: ssm
+    user_data_sha256: 6b08b82f63b05c57d94e8f37a07f3ae29d0683a729f3849ac7c2453bc66b0163
+  test2:
+    build: unbound
+    enrollment:
+      enrollment: sftd-token
+      server_label: sftd.tx.group=coops
+    ephemeral: false
+    group: coops
+    hostname: test2-001
+    identity_type: okta
+    image: imgfile-basic-dask
+    launched: false
+    machine_type: t3.medium
+    mounts:
+    - builder: aws-ebs
+      device: /dev/xvdf
+      group: coops
+      mount_point: /mnt/data
+      public_read: false
+      share_mode: '2770'
+      storage: mnt_data
+      type: ebs
+    run: 2026_08_26t12_00_00
+    session: ssm
+    user_data_sha256: be2d504a9377048bcb743ef83a2816a1328b174ede526a140a65aaeb32ef2919

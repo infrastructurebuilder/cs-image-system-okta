@@ -1,0 +1,31 @@
+---
+# Every entry is checked by `validate` and by every run: the binary must exist
+# (an absolute path, or a name on PATH) and, when `version` is given, the version its checker
+# reads must satisfy the PEP 440 specifier set. The checker is looked up under the entry's
+# name first (packer, tofu, aws-cli, ansible-playbook and bash have their own), then
+# its type; the default type, `executable`, is the generic checker (`--version`, the first
+# dotted number). The floors are what CI's runners and the operator's machine ran in 2026-09.
+executables:
+  - name: aws-cli
+    version: ">=2.32"
+    binary: aws
+  - name: packer
+    version: ">=1.14"          # CI's setup action installs the latest (1.16 today) and bakes with it; the operator runs 1.14
+    binary: /usr/local/bin/packer
+  - name: ansible-playbook
+    binary: /usr/local/bin/ansible-playbook
+    version: ">=2.16"       # ansible-core
+  - name: bash
+    binary: /usr/local/bin/bash
+    version: ">=5"          # never the system's 3.2 on macOS
+  - name: open-tofu-1
+    type: tofu
+    binary: /usr/local/bin/tofu
+    version: ">1,<2"
+    # The former per-runtime state map (bucket/key_root) lived here; state
+    # configuration is the state-backends mechanism only
+    # (cfg/state-backends*.yml -> tf-s3-state-plugin -> .tfbackend.hcl).
+  - name: yq
+    version: ">=4.5"
+  - name: jq
+    version: ">=1.7"

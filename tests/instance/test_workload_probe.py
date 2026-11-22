@@ -14,7 +14,6 @@ history: bundle XII item 14 (walk finding F35).
 """
 from __future__ import annotations
 
-import pytest
 from harness import FixtureRun, copy_config, stub_environment
 from test_release_whole import _job_env, _stub_minting
 from typer.testing import CliRunner
@@ -82,15 +81,3 @@ def test_the_probe_command_prints_both_verdicts_and_exits_0(tmp_path, monkeypatc
     monkeypatch.setattr(wt, "probe_target", lambda ctx: None)
     result = runner.invoke(app, ["--root-dir", str(root), "workload", "probe"])
     assert result.exit_code == 0 and "role role: not judged" in result.stdout
-
-
-def test_every_starter_recipe_and_guide_carry_the_two_verdicts(rendered_starters):
-    from harness import REPO
-    from test_starter_recipes import JUST, dry_run, recipe_names
-    if JUST is None:
-        pytest.skip("`just` is not on PATH")
-    starter = rendered_starters / "standard-aws"             # the recipe and the guide are the skeleton's: one file, every starter
-    assert "opa-workload-probe" in recipe_names(starter)
-    assert "workload probe" in dry_run(starter, "opa-workload-probe"), "the recipe runs the probe"
-    guide = (REPO / "docs" / "examples" / "_skeleton" / "CI_SETUP.md").read_text()
-    assert "granted" in guide, "the guide names the role verdict"

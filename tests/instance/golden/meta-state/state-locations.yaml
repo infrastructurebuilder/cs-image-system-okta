@@ -1,0 +1,63 @@
+workspaces:
+  aws-ebs:
+    backend: s3-east1
+    bucket: my-east1-tfstate-bucket
+    encrypt: true
+    key: statefiles/csia/aws_ebs.tfstate
+    location: s3://my-east1-tfstate-bucket/statefiles/csia/aws_ebs.tfstate
+    profile: noaa
+    region: us-east-1
+    run: 2026_08_26t12_00_00
+    type: s3
+    use_lockfile: true
+  aws-efs:
+    backend: s3-east1
+    bucket: my-east1-tfstate-bucket
+    encrypt: true
+    key: statefiles/csia/aws_efs.tfstate
+    location: s3://my-east1-tfstate-bucket/statefiles/csia/aws_efs.tfstate
+    profile: noaa
+    region: us-east-1
+    run: 2026_08_26t12_00_00
+    type: s3
+    use_lockfile: true
+  aws-s3:
+    backend: s3-east1
+    bucket: my-east1-tfstate-bucket
+    encrypt: true
+    key: statefiles/csia/aws_s3.tfstate
+    location: s3://my-east1-tfstate-bucket/statefiles/csia/aws_s3.tfstate
+    profile: noaa
+    region: us-east-1
+    run: 2026_08_26t12_00_00
+    type: s3
+    use_lockfile: true
+  okta-groups-ro:
+    backend: local-dev
+    location: local://state/okta_groups_ro.tfstate
+    path: ../../../../state/okta_groups_ro.tfstate
+    run: 2026_08_26t12_00_00
+    type: local
+  okta-tf-users:
+    backend: local-dev
+    location: local://state/okta_tf_users.tfstate
+    path: ../../../../state/okta_tf_users.tfstate
+    run: 2026_08_26t12_00_00
+    type: local
+  oktagroups:
+    backend: local-dev
+    location: local://state/oktagroups.tfstate
+    path: ../../../../state/oktagroups.tfstate
+    run: 2026_08_26t12_00_00
+    type: local
+  open-tofu:
+    backend: s3-east2
+    bucket: noaa-ioos-cloud-sandbox-tfstate
+    encrypt: true
+    key: statefiles/csia-image-system-test/open_tofu.tfstate
+    location: s3://noaa-ioos-cloud-sandbox-tfstate/statefiles/csia-image-system-test/open_tofu.tfstate
+    profile: noaa
+    region: us-east-2
+    run: 2026_08_26t12_00_00
+    type: s3
+    use_lockfile: true

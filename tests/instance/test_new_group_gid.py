@@ -18,8 +18,7 @@ import re
 from pathlib import Path
 
 import pytest
-
-from tests.harness import FixtureRun, copy_config
+from harness import FixtureRun, copy_config
 
 
 @pytest.fixture

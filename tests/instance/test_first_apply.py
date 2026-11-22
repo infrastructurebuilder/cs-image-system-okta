@@ -18,8 +18,7 @@ import logging
 from pathlib import Path
 
 import pytest
-
-from tests.harness import FixtureRun, copy_config
+from harness import FixtureRun, copy_config
 
 NO_STATE = ("Error: No state file was found!\n\n"
             "State management commands require a state file. Run this command\n"

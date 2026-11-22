@@ -16,11 +16,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from harness import FixtureRun
 
 from cs_image_system.contract.lifecycles import Lifecycle
 from cs_image_system.engine import state_query as sq
 from cs_image_system.engine.workload_access import reconcile_workload_access
-from tests.harness import FixtureRun
 
 CONNECTION, ROLE = "github-cs-image-system", "cs-image-system-ci"
 

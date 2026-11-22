@@ -17,12 +17,12 @@ from pathlib import Path
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from starter_support import _starter_copy
 
 from cs_image_system.engine import bootstrap as bs
 from cs_image_system.engine.bootstrap.questions import Refused
 from cs_image_system.okta_opa_plugin import bootstrap as okta
 from cs_image_system.okta_opa_plugin import okta_app_check as oac
-from tests.test_bootstrap import _starter_copy
 
 REPO = "acme/widgets"
 
@@ -81,7 +81,8 @@ def _ask(root: Path, **kw):
 # ------------------------------------------------------------- the section itself
 
 def test_the_section_is_the_okta_plugins_and_wanted_where_opa_groups_are_managed(tmp_path: Path, world):
-    assert [s.name for s in bs.discover()] == ["github", "aws", "docker", "okta"]
+    # the sections of what this suite installs: the core's, the AWS family's and the plugin's (no docker here)
+    assert [s.name for s in bs.discover()] == ["github", "aws", "okta"]
     assert _section().wanted_default(_facts(_tree(tmp_path))) is True
     bare = tmp_path / "bare"
     (bare / "cfg").mkdir(parents=True)

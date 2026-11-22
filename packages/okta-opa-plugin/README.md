@@ -13,6 +13,22 @@ export-gids` from the OPA Attributes API, the OPA server registry the
 instance lifecycle reads and retires, and the CI login policy the identity
 lifecycle keeps beside each group's user policy through the OPA API.
 
+## Installing
+
+An operator installs the plugin through the system's own extra, beside the
+extras of the tree's runtimes:
+
+```sh
+uv tool install 'cs-image-system[okta]'
+```
+
+The plugin is released from its own repository,
+[infrastructurebuilder/cs-image-system-okta](https://github.com/infrastructurebuilder/cs-image-system-okta),
+from 0.2.0 on (its 0.1.x came out of cs-image-system-3); the `okta` extra
+names it by a range, so a release of the system and a release of the plugin
+need not come together. Installing a release, and choosing extras, is in the
+system's [operations guide](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md#installing-a-release).
+
 ## What it registers
 
 Entry point ([pyproject.toml](pyproject.toml)):
@@ -76,7 +92,7 @@ Defined in
 [okta_tf_workspace.py](src/cs_image_system/okta_opa_plugin/okta_tf_workspace.py).
 Not a model on its own; every `OktaTf*BuilderModel` below inherits these
 fields. The full table is
-[CONFIGURATION 9.1](../../docs/CONFIGURATION.md#91-the-okta-terraform-workspace-shared-by-group-and-user-builders);
+[CONFIGURATION 9.1](../../docs/CONFIGURATION.md#1-the-okta-terraform-workspace-shared-by-group-and-user-builders);
 the plugin's own [Configuration reference](#configuration-reference)
 below repeats it with types and defaults. What each field does here:
 
@@ -130,12 +146,12 @@ Behaviour attached to these fields:
 
 Defined in [okta_tf_models.py](src/cs_image_system/okta_opa_plugin/okta_tf_models.py).
 Extends
-[`GroupBuilderModel`](../base/src/cs_image_system/base/models/group_builder.py),
+[`GroupBuilderModel`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/group_builder.py),
 which itself adds nothing to
-[`BuilderModel`](../base/src/cs_image_system/base/models/builder_model.py)
+[`BuilderModel`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/builder_model.py)
 (`name`, `type`, `description`, `aliases`, `executable`, `is_default`,
 `config`, `gitignore`, `tags`). The full table is
-[CONFIGURATION 9.2](../../docs/CONFIGURATION.md#92-group-builders). The
+[CONFIGURATION 9.2](../../docs/CONFIGURATION.md#2-group-builders). The
 keys this plugin adds:
 
 - `gateway_selector`: the `gateway_selector` of every group's login
@@ -144,7 +160,7 @@ keys this plugin adds:
   project.
 - `workload_connection`: the name of the team's OPA workload connection,
   made by hand once
-  ([CI_SETUP.md, section 3.5](../../docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access)).
+  ([CI_SETUP.md, section 3.5](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access)).
   Read only together with `workload_role`.
 - `workload_role`: the name of the team's one workload role. With both
   names set, the builder keeps one CI login policy per managed group
@@ -177,11 +193,11 @@ read-only group root: it expects `okta` in `required_providers`, because the
 `OktaUserBuilderModel`
 ([okta_tf_models.py](src/cs_image_system/okta_opa_plugin/okta_tf_models.py))
 extends
-[`UserBuilderModel`](../base/src/cs_image_system/base/models/user_builder.py)
+[`UserBuilderModel`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/user_builder.py)
 and adds no fields. `OktaTfUserBuilderModel`
 ([okta_opa_tf_user_models.py](src/cs_image_system/okta_opa_plugin/okta_opa_tf_user_models.py))
 mixes in the workspace fields. The full table is
-[CONFIGURATION 9.3](../../docs/CONFIGURATION.md#93-user-builders). What
+[CONFIGURATION 9.3](../../docs/CONFIGURATION.md#3-user-builders). What
 this plugin does with the base fields:
 
 - `default_user_email_template` renders a user's `email` when the item
@@ -213,10 +229,10 @@ defaults every user to lookup-only and refuses `managed: true`.
 ### How the group and user items are read
 
 The group items are the base
-[`Group`](../base/src/cs_image_system/base/models/group.py) model; the
+[`Group`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/group.py) model; the
 user items are this plugin's `OktaUser`
 ([okta_user.py](src/cs_image_system/okta_opa_plugin/okta_user.py)), the base
-[`User`](../base/src/cs_image_system/base/models/user.py) with the Okta
+[`User`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/user.py) with the Okta
 profile fields added (the base carries none of them).
 
 Group fields consumed: `name`, `members`, `admins`, `is_root` (the root
@@ -243,7 +259,7 @@ override of the builder's default), `attributes` (validated against
 
 [okta_tf_models.py](src/cs_image_system/okta_opa_plugin/okta_tf_models.py)
 also holds the `TerraformGenerator` classes the builders render through
-[hashicorp-utils](../hashicorp-utils/src/cs_image_system/hashicorp_utils/blocks.py):
+[hashicorp-utils](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/hashicorp-utils/src/cs_image_system/hashicorp_utils/blocks.py):
 
 | Class | Emits |
 |---|---|
@@ -257,7 +273,7 @@ by `_` (`avery.alpha` becomes `avery_alpha`).
 ## The builders
 
 All four own a terraform root through
-[`TerraformRootMixin`](../tofu-roots/src/cs_image_system/tofu_roots/roots.py).
+[`TerraformRootMixin`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/tofu-roots/src/cs_image_system/tofu_roots/roots.py).
 Paths below are relative to the run's generation directory
 (`generated/identity/` when the identity lifecycle runs). `<ws>` is the
 builder's name.
@@ -266,7 +282,7 @@ builder's name.
 
 [okta_opa_tf_group_builder.py](src/cs_image_system/okta_opa_plugin/okta_opa_tf_group_builder.py).
 Extends
-[`GroupBuilderBase`](../base/src/cs_image_system/base/basic/builder_base_group.py).
+[`GroupBuilderBase`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/basic/builder_base_group.py).
 Every lifecycle hook keys on the `group-generation` phase and is silent in
 every other phase.
 
@@ -421,7 +437,7 @@ unchanged. What differs:
 
 [okta_opa_tf_user_builder.py](src/cs_image_system/okta_opa_plugin/okta_opa_tf_user_builder.py).
 Extends
-[`UserBuilderBase`](../base/src/cs_image_system/base/basic/builder_base_user.py).
+[`UserBuilderBase`](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/basic/builder_base_user.py).
 Every hook keys on the `user-generation` phase and does nothing when no
 users are attached.
 
@@ -464,7 +480,7 @@ emission and commands are the parent's.
 ## Emission
 
 Real file names from the golden emission under
-[tests/fixtures/golden/generated/identity](../../tests/fixtures/golden/generated/identity),
+[tests/instance/golden/generated/identity](../../tests/instance/golden/generated/identity),
 produced by the fixture's `oktagroups` (`okta-tf`), `okta-groups-ro`
 (`okta-tf-ro`, one group, `readers`) and
 `okta-tf-users` (`okta-tf-ro`) builders, all bound to the fixture's
@@ -475,18 +491,18 @@ produced by the fixture's `oktagroups` (`okta-tf`), `okta-groups-ro`
 
 | File | Content |
 |---|---|
-| [oktagroups/group-generation/oktagroups-group-generation.tf](../../tests/fixtures/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation.tf) | `terraform {}` with `oktapam` and `external`, `backend "local" {}`, `provider "oktapam"` (key and secret as `var.` references) and `provider "external"`, both `alias = "oktagroups"`. |
-| [oktagroups-group-generation-oktagroups-vars.tf](../../tests/fixtures/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-oktagroups-vars.tf) | The two sensitive variables. |
-| [oktagroups-group-generation-group-basic.tf](../../tests/fixtures/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-group-basic.tf), `-coops.tf`, `-secofs.tf`, `-stofs.tf`, `-tcmet.tf` | One `module "group_<label>"` call each. |
-| [oktagroups-group-generation-outputs.tf](../../tests/fixtures/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-outputs.tf) | The gid shim data source and the three outputs. |
-| [oktagroups-group-generation.tfbackend.hcl](../../tests/fixtures/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation.tfbackend.hcl) | Backend partial configuration (`path = ...` for the local backend). |
-| [okta-tf-users/user-generation/okta-tf-users-user-generation.tf](../../tests/fixtures/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation.tf) | `terraform {}` with `okta` and `external`, `backend "local" {}`, `provider "okta"` with `org_name`/`base_url`, the `data "external" "sensitive"` block carrying the ciphertexts (a derived address as `<name>@ENC[age:...]`), and `locals`. |
-| [okta-tf-users-user-generation-users-data.tf](../../tests/fixtures/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation-users-data.tf) | One `data "okta_user"` lookup per user. No `-users.tf` file: the builder is read-only, so no resources exist. |
-| [okta-tf-users-user-generation.tfbackend.hcl](../../tests/fixtures/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation.tfbackend.hcl) | Backend partial configuration. |
-| [run-identity.sh](../../tests/fixtures/golden/generated/identity/run-identity.sh) | The deferred commands: only the `oktagroups` root's `rm`, `init`, `prune-attachments`, `plan` and `gate-plan`, each entered through `cs-image-system materialize` (the fixture has `apply_identity: false`, so no `apply-check` or `apply`). |
+| [oktagroups/group-generation/oktagroups-group-generation.tf](../../tests/instance/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation.tf) | `terraform {}` with `oktapam` and `external`, `backend "local" {}`, `provider "oktapam"` (key and secret as `var.` references) and `provider "external"`, both `alias = "oktagroups"`. |
+| [oktagroups-group-generation-oktagroups-vars.tf](../../tests/instance/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-oktagroups-vars.tf) | The two sensitive variables. |
+| [oktagroups-group-generation-group-basic.tf](../../tests/instance/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-group-basic.tf), `-coops.tf`, `-secofs.tf`, `-stofs.tf`, `-tcmet.tf` | One `module "group_<label>"` call each. |
+| [oktagroups-group-generation-outputs.tf](../../tests/instance/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation-outputs.tf) | The gid shim data source and the three outputs. |
+| [oktagroups-group-generation.tfbackend.hcl](../../tests/instance/golden/generated/identity/oktagroups/group-generation/oktagroups-group-generation.tfbackend.hcl) | Backend partial configuration (`path = ...` for the local backend). |
+| [okta-tf-users/user-generation/okta-tf-users-user-generation.tf](../../tests/instance/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation.tf) | `terraform {}` with `okta` and `external`, `backend "local" {}`, `provider "okta"` with `org_name`/`base_url`, the `data "external" "sensitive"` block carrying the ciphertexts (a derived address as `<name>@ENC[age:...]`), and `locals`. |
+| [okta-tf-users-user-generation-users-data.tf](../../tests/instance/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation-users-data.tf) | One `data "okta_user"` lookup per user. No `-users.tf` file: the builder is read-only, so no resources exist. |
+| [okta-tf-users-user-generation.tfbackend.hcl](../../tests/instance/golden/generated/identity/okta-tf-users/user-generation/okta-tf-users-user-generation.tfbackend.hcl) | Backend partial configuration. |
+| [run-identity.sh](../../tests/instance/golden/generated/identity/run-identity.sh) | The deferred commands: only the `oktagroups` root's `rm`, `init`, `prune-attachments`, `plan` and `gate-plan`, each entered through `cs-image-system materialize` (the fixture has `apply_identity: false`, so no `apply-check` or `apply`). |
 
 The system's identity read-model
-([meta-state/identity.yaml](../../tests/fixtures/golden/meta-state/identity.yaml))
+([meta-state/identity.yaml](../../tests/instance/golden/meta-state/identity.yaml))
 records, per group, the `builder`, `identity_type: okta`,
 `gid_policy: creation-only`, `managed`, `is_root`, members and admins as
 this plugin reports them, plus a `workload` record (the expected
@@ -497,7 +513,7 @@ objects.
 ## Example configuration
 
 From
-[tests/fixtures/config/cfg/group-builders.yml](../../tests/fixtures/config/cfg/group-builders.yml):
+[tests/instance/fixture/cfg/group-builders.yml](../../tests/instance/fixture/cfg/group-builders.yml):
 
 ```yaml
 group_builders:
@@ -539,7 +555,7 @@ user_builders:
 `posix:` is required on every `okta-tf` group builder (see
 [`posix`](#configuration-reference) in the configuration reference): an
 entry without it fails `validate`. `posix-local` is a group builder of the
-[posix identity plugin](../posix-identity-plugin/README.md), declared in
+[posix identity plugin](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/posix-identity-plugin/README.md), declared in
 the same file; it takes no further fields.
 
 The live tree adds `workload_connection: "github-cs-image-system"` and
@@ -548,14 +564,14 @@ roots to the default (S3) backend.
 
 The `gateway_selector` those groups use comes from the global
 configuration
-([cfg/_config.yml](../../tests/fixtures/config/cfg/_config.yml)):
+([cfg/_config.yml](../../tests/instance/fixture/cfg/_config.yml)):
 `config.okta_gateway_selector: "environment=staging"`.
 
 The groups these builders act on live in
-[tests/fixtures/config/groups](../../tests/fixtures/config/groups). Member
+[tests/instance/fixture/groups](../../tests/instance/fixture/groups). Member
 and admin entries are bare OPA usernames, declared encrypted (`ENC[age:...]`
 ciphertexts, shortened here); the golden shows their decrypted values. From
-[test-group.yaml](../../tests/fixtures/config/groups/test-group.yaml):
+[test-group.yaml](../../tests/instance/fixture/groups/test-group.yaml):
 
 ```yaml
 groups:
@@ -582,7 +598,7 @@ groups:
 
 Because `basic` is the root group, its admin `avery.alpha` appears in the
 `admins` list of every other group's module call. A user entry from
-[users.yaml](../../tests/fixtures/config/groups/users.yaml) has the same
+[users.yaml](../../tests/instance/fixture/groups/users.yaml) has the same
 shape: `name`, `first_name`, `last_name` (all required, all declared
 encrypted) and an optional `email`; with no `email`, the builder's template
 derives `<name>@example.invalid`.
@@ -621,8 +637,8 @@ when the plugin is installed, and `cs-image-system --help` lists them.
 
 Everything below exists outside the system. Where the plugin finds each
 item is named next to it; the general rules are in
-[docs/OPERATIONS.md](../../docs/OPERATIONS.md) ("Credentials contract")
-and [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md) (section 14,
+[docs/OPERATIONS.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md) ("Credentials contract")
+and the system's [docs/CONFIGURATION.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/CONFIGURATION.md) (section 14,
 environment variables).
 
 **An Okta org and an OPA team.** The org name goes in `org`, the team
@@ -723,7 +739,7 @@ gateway's security group.
 
 **The workload connection and role**, only when CI is to log in: made by
 hand once in the OPA admin console following
-[the CI setup guide, section 3.5](../../docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access), then named on
+[the CI setup guide, section 3.5](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access), then named on
 the `okta-tf` group builder as `workload_connection` and `workload_role`.
 The system reads both by name and never writes them. The bootstrap's
 Okta and OPA section (`okta =
@@ -858,7 +874,7 @@ str must not be blank. They are planned and probed, never written.
   identity read-model, because generation rewrites that file on every
   dry run and every `record`. A tree on an older release can still plan
   such a group for destruction (the gate refuses it);
-  [the stage index](../../docs/CHANGES.md#r0-1-1-dev23) places the rule.
+  [the stage index](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/CHANGES.md#r0-1-1-dev23) places the rule.
   A dry run logs which groups the step will look for. The CI policy
   reconcile and `query_state` skip an unmanaged group.
 - **`include_root_group_in_admins: false`.** The root group's admin
@@ -948,12 +964,12 @@ root needs.`
 
 **At `validate` (and before every run).** The plugin's item checks run
 through the base's `validate_identity_items`
-([identity_attributes.py](../engine/src/cs_image_system/engine/identity_attributes.py)):
+([identity_attributes.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/identity_attributes.py)):
 `OktaTfUserRoBuilder.validate_user` refuses `managed: true`;
 `validate_attributes` refuses unknown names, wrong types, ids below 1024
 and blank strings on groups and users. Around them the base checks that a
 group the read-model recorded as managed is still declared
-([validation_rules.py](../engine/src/cs_image_system/engine/validation_rules.py)),
+([validation_rules.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/validation_rules.py)),
 that every base image's `identity_types` names a registered plugin, that
 an instance image's group resolves to an identity type its base declares,
 and, when the instance-image lifecycle is requested with `apply_instances`
@@ -996,19 +1012,19 @@ reads every planned item's live attributes and the team's conflict report
 and prints `would set: ...` lines; it never writes.
 
 **After apply.** With `apply_identity` on and the workload fields set, the
-base's [workload_access.py](../engine/src/cs_image_system/engine/workload_access.py)
+base's [workload_access.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/workload_access.py)
 calls `ensure_workload_access` for every managed group and records
 `{action: created|updated|unchanged|failed, policy, id, role_id, run}`
 under the group's `workload` key in `meta-state/identity.yaml`; a failure
 is an `ERROR` log line (`Group <g>: its CI login policy was NOT reconciled
 (...); the CI login proof for this group fails until it is`), never fatal
 to the apply that already happened. When an instance is decommissioned,
-the base's [launch_params.py](../base/src/cs_image_system/base/launch_params.py)
+the base's [launch_params.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/launch_params.py)
 calls `retire_servers_named` for its recorded hostname and logs the
 retirement or an `ERROR` naming the stale server.
 
 **In the state query** (`state query [--strict]`, every run's first step;
-[state_query.py](../engine/src/cs_image_system/engine/state_query.py)).
+[state_query.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/state_query.py)).
 `query_state` reads every managed group's `<group>_user` attributes,
 members, the `<group>_admin` members, the login project's enrollment
 tokens and, with the workload fields set, the policies, roles and
@@ -1027,7 +1043,7 @@ any drift but `stale` and on any `unavailable:` line; a plain run refuses
 only on `[HARD]` drift.
 
 **In the login proof** (`verify login`, `just ci-login-proof`, the `sft`
-leg of `cloud-verify`; [login_proof.py](../engine/src/cs_image_system/engine/commands/login_proof.py)).
+leg of `cloud-verify`; [login_proof.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/commands/login_proof.py)).
 For each standing instance of a group whose builder names the workload
 objects: the machine is running, exactly one registration answers to its
 hostname (`registered_servers`), `sft resolve` succeeds, `id` runs over
@@ -1037,7 +1053,7 @@ hostname (`registered_servers`), `sft resolve` succeeds, `id` runs over
 become in-bake assertions of every base image declaring `okta`, and
 `activation_verify_commands` (the `tx.group` label, sftd enabled) of every
 instance image, through the base's
-[image_tests.py](../base/src/cs_image_system/base/image_tests.py); a
+[image_tests.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/image_tests.py); a
 failing line fails the bake.
 
 **In the gid shim.** `identity export-gids` answers terraform's `data
@@ -1058,12 +1074,12 @@ outcomes.
 ## When it fails
 
 Incidents that have happened, with their cause and fix, are recorded on
-[INCIDENTS.md](../../docs/INCIDENTS.md); what follows keeps each
+[INCIDENTS.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/INCIDENTS.md); what follows keeps each
 failure's symptom, its meaning and what to do.
 
 Two refusals come first because every tree meets them once, when its
 `okta-tf` group builders first need a `posix:` line
-([the stage index](../../docs/CHANGES.md#s75) places the rule):
+([the stage index](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/CHANGES.md#s75) places the rule):
 
 | Symptom | Meaning | Do |
 |---|---|---|
@@ -1075,8 +1091,8 @@ Two refusals come first because every tree meets them once, when its
 Failures by symptom: what each means and what to do. Each names the
 symptom as the operator sees it, what it means, where to look and what
 to do; the general rules are in
-[docs/OPERATIONS.md](../../docs/OPERATIONS.md) and
-[the CI setup guide](../../docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access).
+[docs/OPERATIONS.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md) and
+[the CI setup guide](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access).
 
 - **An identity plan wants to *create* `oktapam_user_group_attachment`
   resources that already stand in OPA.** The memberships exist out of
@@ -1290,53 +1306,54 @@ Failures the code raises:
 ## Related
 
 - Base models extended:
-  [group_builder.py](../base/src/cs_image_system/base/models/group_builder.py),
-  [user_builder.py](../base/src/cs_image_system/base/models/user_builder.py),
-  [builder_model.py](../base/src/cs_image_system/base/models/builder_model.py);
+  [group_builder.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/group_builder.py),
+  [user_builder.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/user_builder.py),
+  [builder_model.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/builder_model.py);
   items read:
-  [group.py](../base/src/cs_image_system/base/models/group.py),
-  [user.py](../base/src/cs_image_system/base/models/user.py).
+  [group.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/group.py),
+  [user.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/models/user.py).
 - Base builder classes:
-  [builder_base_group.py](../base/src/cs_image_system/base/basic/builder_base_group.py),
-  [builder_base_user.py](../base/src/cs_image_system/base/basic/builder_base_user.py).
+  [builder_base_group.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/basic/builder_base_group.py),
+  [builder_base_user.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/basic/builder_base_user.py).
 - Base code that calls this plugin's hooks:
-  [read_models.py](../engine/src/cs_image_system/engine/read_models.py)
+  [read_models.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/read_models.py)
   (the identity read-model),
-  [state_query.py](../engine/src/cs_image_system/engine/state_query.py)
+  [state_query.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/state_query.py)
   (drift rules),
-  [workload_access.py](../engine/src/cs_image_system/engine/workload_access.py)
+  [workload_access.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/workload_access.py)
   (the CI policy reconcile),
-  [launch_params.py](../base/src/cs_image_system/base/launch_params.py)
+  [launch_params.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/base/src/cs_image_system/base/launch_params.py)
   (launch parameters, the enrollment token, the registry),
-  [identity_attributes.py](../engine/src/cs_image_system/engine/identity_attributes.py)
+  [identity_attributes.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/identity_attributes.py)
   (attributes),
-  [identity_gids.py](../engine/src/cs_image_system/engine/commands/identity_gids.py)
+  [identity_gids.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/commands/identity_gids.py)
   (the gid shim command),
-  [login_proof.py](../engine/src/cs_image_system/engine/commands/login_proof.py)
+  [login_proof.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/commands/login_proof.py)
   (`verify login`),
-  [state_migration.py](../engine/src/cs_image_system/engine/commands/state_migration.py)
+  [state_migration.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/engine/src/cs_image_system/engine/commands/state_migration.py)
   (the state backup), and the CLI in
-  [cli.py](../system/src/cs_image_system/system/cli.py).
+  [cli.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/system/src/cs_image_system/system/cli.py).
 - Library:
-  [hashicorp-utils](../hashicorp-utils) --
-  [collector.py](../hashicorp-utils/src/cs_image_system/hashicorp_utils/collector.py)
+  [hashicorp-utils](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/hashicorp-utils) --
+  [collector.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/hashicorp-utils/src/cs_image_system/hashicorp_utils/collector.py)
   (providers, variables, backends, sensitive references),
-  [blocks.py](../hashicorp-utils/src/cs_image_system/hashicorp_utils/blocks.py)
+  [blocks.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/hashicorp-utils/src/cs_image_system/hashicorp_utils/blocks.py)
   (HCL rendering),
-  [roots.py](../tofu-roots/src/cs_image_system/tofu_roots/roots.py)
+  [roots.py](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/packages/tofu-roots/src/cs_image_system/tofu_roots/roots.py)
   (`TerraformRootMixin`, the gated apply sequence).
 - Terraform module called:
   [tfmodules/okta_opa_module](src/cs_image_system/okta_opa_plugin/tfmodules/okta_opa_module)
   ([main.tf](src/cs_image_system/okta_opa_plugin/tfmodules/okta_opa_module/main.tf),
   [variables.tf](src/cs_image_system/okta_opa_plugin/tfmodules/okta_opa_module/variables.tf),
   [outputs.tf](src/cs_image_system/okta_opa_plugin/tfmodules/okta_opa_module/outputs.tf)).
-- Manuals: [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md) (section
-  9, 11.5, 11.6, 13, 14), [docs/OPERATIONS.md](../../docs/OPERATIONS.md)
+- Manuals: this repository's [docs/CONFIGURATION.md](../../docs/CONFIGURATION.md) (the
+  builders' fields), the system's [docs/CONFIGURATION.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/CONFIGURATION.md)
+  (sections 11.5, 11.6, 13, 14), [docs/OPERATIONS.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md)
   ("CI logs in through the policy the system manages", "The state
   query", "Credentials contract", "The gid shim", "Rules: Identity"),
-  [docs/DESIGN.md](../../docs/DESIGN.md) (N1, N7, N19, section D),
-  [the CI setup guide, section 3.5](../../docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access).
+  [docs/DESIGN.md](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/DESIGN.md) (N1, N7, N19, section D),
+  [the CI setup guide, section 3.5](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/examples/_skeleton/CI_SETUP.md#35-okta-and-okta-privileged-access).
 - Tests: [tests/](tests) -- the module call, the workspace mixin, the
   resource emitters, the four builder roots, the gid shim, the server
   registry and the workload policy; the `prune-attachments` runner step
-  in [tests/test_stale_attachments.py](../../tests/test_stale_attachments.py).
+  in [tests/test_stale_attachments.py](../../tests/instance/test_stale_attachments.py).
