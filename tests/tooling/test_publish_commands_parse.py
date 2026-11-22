@@ -4,6 +4,9 @@
 
 """Every `uv publish` line of the Publish workflow is one uv accepts.
 
+Allowed under Constitution IX (1.1.0): it runs one of the repository's own
+publish commands, as the release would, sending nothing anywhere.
+
 A publish runs only when a release tag is pushed, so a command line uv
 refuses is otherwise found by the release itself, after the tag (the first
 0.2.0 tag: `--index` cannot be combined with `--check-url`). Each line is run
@@ -31,11 +34,6 @@ def _publish_lines() -> list[str]:
     jobs = yaml.safe_load(WORKFLOW.read_text())["jobs"]
     return [step["run"] for job in jobs.values() for step in job.get("steps", [])
             if str(step.get("run", "")).startswith("uv publish")]
-
-
-def test_the_workflow_publishes_to_both_indexes():
-    lines = _publish_lines()
-    assert any("--index testpypi" in ln for ln in lines) and any("--index pypi" in ln for ln in lines)
 
 
 @pytest.mark.parametrize("line", _publish_lines())

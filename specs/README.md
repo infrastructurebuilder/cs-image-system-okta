@@ -11,7 +11,7 @@ tests describe it.
 
 | Specification | Serves | Ends in | State |
 | --- | --- | --- | --- |
-| [001 A release is published with no token anywhere](001-trusted-publishing/spec.md) | operators; a plugin author, and whoever forks the repository | a pushed release tag publishing the plugin to TestPyPI, then PyPI, with no upload token stored or exported | in progress 2026-11-22: built; the indexes' trust and the first publish are the operator's ([tasks](001-trusted-publishing/tasks.md)) |
+| [001 A release is published with no token anywhere](001-trusted-publishing/spec.md) | operators; a plugin author, and whoever forks the repository | a pushed release tag publishing the plugin to TestPyPI, then PyPI, with no upload token stored or exported | complete 2026-11-22: 0.2.0 published by it to TestPyPI and PyPI, converged ([tasks](001-trusted-publishing/tasks.md)) |
 
 A specification's state is one of `written`, `planned`, `in progress`,
 `merged` and `complete`; it is `complete` only when the constitution's

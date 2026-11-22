@@ -1,9 +1,21 @@
 <!--
 Sync Impact Report
 
-Version change: none -> 1.0.0
-Ratified: 2026-11-22, by the operator ("make the okta plugin into a
-  speckit-enabled project").
+Version change: 1.0.0 -> 1.1.0
+Bump: MINOR. A principle was materially expanded (Governance: "MINOR when
+  a principle or section is added or materially expanded"); no principle
+  was removed or redefined.
+Amended: 2026-11-22, by the operator ("amend IX"), at spec 001's
+  convergence (its T014).
+Modified principles: IX. Tests guard behaviour or architecture -- a test
+  may also run one of the repository's own release or publish commands to
+  show it is accepted, since such a command otherwise runs first when a
+  release depends on it (the first 0.2.0 publish failed on one).
+Added sections: none. Removed sections: none.
+
+Earlier amendments:
+  none -> 1.0.0 (2026-11-22): first ratified constitution, by the operator
+    ("make the okta plugin into a speckit-enabled project").
 Source: cs-image-system's constitution 1.2.0 (cs-image-system-3,
   .specify/memory/constitution.md), from which this repository's plugin
   moved (spec 008 there). Its users, principles, constraints, workflow and
@@ -115,10 +127,14 @@ drifts twice.
 A test MUST NOT assert wording, naming, ordering or the prose of a
 document. A test that asserts a property of the repository itself is
 allowed only when it holds an architectural invariant of Principle VI or a
-safety invariant of Principles III to V.
+safety invariant of Principles III to V, or when it runs one of the
+repository's own release or publish commands, as the release would run it
+but sending nothing anywhere, to show the command is accepted.
 
 Rationale: tests of form fail legitimate refactors and catch no defect a
-user would meet.
+user would meet. A release command is different: it runs for real only
+when a release already depends on it, so a command that is refused stops a
+release after its tag (the first 0.2.0 publish did), a defect a user meets.
 
 ### X. What a change makes false is part of the change
 
@@ -196,4 +212,4 @@ holds for this repository, and the difference is named in an amendment.
   before it is planned: it names its user and ends in an executable
   acceptance.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-22
+**Version**: 1.1.0 | **Ratified**: 2026-11-22 | **Last Amended**: 2026-11-22
