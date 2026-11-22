@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2026 Mykel Alvis <mykelalvis@infrastructurebuilder.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: CI
+
+# The Okta plugin's acceptance tests on a fresh runner, with everything of the
+# system it needs installed from the package index by the ranges its manifests
+# declare (`just init` resolves the lock; nothing reads another repository's
+# checkout). Every push to develop and every pull request (spec 008). Nothing
+# here applies anything or reaches Okta, OPA or AWS, except the `lookup` job: a
+# read-only lookup against the OPA team, run only when dispatched by hand, with
+# the team's key pair as secrets (never echoed).
+on:
+  push:
+    branches: [develop]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      lookup:
+        description: "Also run the read-only lookup against the OPA team (needs the team's key pair as secrets)"
+        type: boolean
+        default: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install OpenTofu
+        # an instance test may check the emitted identity roots with a real `tofu`, and the strict
+        # session counts a test that did not run as a failure. The real binary, not the action's wrapper
+        uses: opentofu/setup-opentofu@v2
+        with:
+          tofu_wrapper: false
+
+      - name: Install dependencies
+        run: just init
+
+      - name: Acceptance tests
+        run: just test
+
+      - name: Public-safe
+        # nothing in the checkout may be material that must never be public
+        run: just public-safe
+
+  lookup:
+    if: github.event_name == 'workflow_dispatch' && inputs.lookup
+    needs: verify
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install just
+        uses: extractions/setup-just@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: just init
+
+      - name: Read-only lookup against the OPA team
+        # the key pair is read by the script and never printed; the team and org are names, not secrets
+        env:
+          OPA_ORG: noaa
+          OPA_TEAM: nos-coastal-modeling-cloud-sandbox
+          OKTAPAM_KEY: ${{ secrets.TF_VAR_NOS_KEY }}
+          OKTAPAM_SECRET: ${{ secrets.TF_VAR_NOS_SECRET }}
+        run: uv run --no-sync python scripts/opa-lookup

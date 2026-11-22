@@ -1,0 +1,35 @@
+---
+
+# Image builders are the actual builder for an image on a a specific runtime.
+# The image buuilder's task is to take images and generate a useable artifact
+# for a runtime
+image_builders:
+  - name: pckr-ebs-ans
+    is_default: true
+    type: packer-ebs
+    # Optional, but if the version is specified, it must actually match
+    runtime: default
+    executable: packer    
+    # `parameters: [build, .]` is not a field -- argv the packer plugin assembles itself;
+    # the field is retired (a module call's inputs are a storage builder's `variables:`)
+    required_plugins:
+      - name: amazon
+        source: github.com/hashicorp/amazon
+        version: '>= 1.0.0'
+      - name: ansible
+        source: github.com/hashicorp/ansible
+        version: '>= 1.0.0'    
+  - name: some-other-builder
+    type: packer-ebs
+    # Optional, but if the version is specified, it must actually match
+    runtime: default
+    executable: packer   # every declared executable must exist
+    # `parameters: [build, .]` is not a field -- argv the packer plugin assembles itself;
+    # the field is retired (a module call's inputs are a storage builder's `variables:`)
+    required_plugins:
+      - name: amazon
+        source: github.com/hashicorp/amazon
+        version: '>= 1.0.0'
+      - name: ansible
+        source: github.com/hashicorp/ansible
+        version: '>= 1.0.0'

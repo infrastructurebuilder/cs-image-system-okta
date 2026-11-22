@@ -1,0 +1,137 @@
+# SPDX-FileCopyrightText: 2026 Mykel Alvis <mykelalvis@infrastructurebuilder.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# The workspace of the Okta identity plugin for cs-image-system: one
+# distribution, cs-image-system-okta-opa-plugin, released from here on its own
+# line from 0.2.0 (`just release`). This root is never built or published; an
+# operator installs the plugin through the system's own extra,
+# `uv tool install 'cs-image-system[okta]'`.
+#
+# Everything of the system the plugin needs comes from the package index, by
+# range: the contract, the kit and the Terraform libraries (the plugin's
+# dependencies), and the command line with its test kit and the core plugins
+# the instance suite's fixture declares (the dev group below). The instance
+# suite (tests/instance) launches its machines on the AWS family, which only
+# the `instance` group names (spec 008, FR-004). Nothing here names a path into
+# another repository.
+[project]
+name = "cs-image-system-okta-workspace"
+version = "0.2.0"
+description = "The workspace of the Okta identity plugin for cs-image-system (never published)"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+classifiers = ["Private :: Do Not Upload"]
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "cs-image-system-okta-opa-plugin[test]",
+    # the instance suite (tests/instance): the command line and its test kit, and the core plugins
+    # its fixture declares, from the index, by the range of the system's line
+    "cs-image-system-system[testing]>=0.1.11,<0.2",
+    "cs-image-system-packer-plugin>=0.1.11,<0.2",
+    "cs-image-system-ansible-plugin>=0.1.11,<0.2",
+    "cs-image-system-bash-mod-plugin>=0.1.11,<0.2",
+    "cs-image-system-default-os-plugin>=0.1.11,<0.2",
+    "cs-image-system-local-state-plugin>=0.1.11,<0.2",
+    "cs-image-system-posix-identity-plugin>=0.1.11,<0.2",
+    "pytest>=8.3",
+    "ruff>=0.15",
+    "pyright>=1.1.390",
+    "reuse>=6.2.0",
+    "bump-my-version>=1.2",
+]
+# the one place the AWS family is named: the instance suite's machines run on it
+# (it may change; tests/test_aws_only_in_instance.py holds it here)
+instance = [
+    "cs-image-system-aws-runtime-plugin>=0.1.11,<0.3",
+    "cs-image-system-tf-ebs-instance-plugin>=0.1.11,<0.3",
+    "cs-image-system-tf-s3-state-plugin>=0.1.11,<0.3",
+]
+
+[tool.uv]
+package = false
+default-groups = ["dev", "instance"]
+
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+cs-image-system-okta-opa-plugin = { workspace = true }
+
+# The indexes a release is published to: `uv publish --index <name>`. Both are
+# explicit, so neither takes part in resolving this workspace's dependencies.
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple/"
+publish-url = "https://upload.pypi.org/legacy/"
+explicit = true
+
+# The plugin's one number: its manifest's version and this root's.
+[tool.bumpversion]
+current_version = "0.2.0"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+commit = false
+tag = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "packages/okta-opa-plugin/pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+extend-exclude = [".venv", "generated", "**/generated"]
+# the scripts carry no .py suffix (they are run by name), so ruff is told they are Python
+extend-include = ["scripts/*"]
+
+[tool.ruff.lint]
+# the system's own rules: pyflakes, syntax errors, the complexity ceiling,
+# bugbear and import sorting, every one blocking
+select = ["F", "E9", "C90", "B", "I"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 20
+
+[tool.ruff.lint.isort]
+known-first-party = ["cs_image_system"]
+
+[tool.pytest.ini_options]
+# The strict session (the system's test kit): a run that collects nothing or
+# skips anything fails. tests/instance/starter is a `full-test` leg
+# (scripts/full-test-legs names it), never part of `just test`.
+testpaths = [
+    "packages/okta-opa-plugin/tests",
+    "tests",
+]
+norecursedirs = [".*", "__pycache__", "fixture", "golden", "starter"]
+addopts = "-p cs_image_system.system.testing.strict --import-mode=importlib"
+# the instance tests import their harness (tests/instance/harness.py) by name
+pythonpath = ["tests/instance"]
+
+[tool.pyright]
+include = ["packages/**/src", "packages/**/tests", "tests"]
+exclude = ["**/.venv", "**/generated"]
+extraPaths = [
+    "tests",
+    "tests/instance",
+    "packages/okta-opa-plugin/src",
+]
+pythonVersion = "3.13"
+typeCheckingMode = "standard"
+reportMissingImports = "warning"
+reportIncompatibleMethodOverride = "error"

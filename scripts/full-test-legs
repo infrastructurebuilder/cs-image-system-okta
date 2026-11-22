@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Mykel Alvis <mykelalvis@infrastructurebuilder.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+"""The legs of `just full-test` beyond `just test`, each said as it runs and
+judged as passed or FAILED; the exit status is 1 when any leg failed.
+
+The low end of the SDK ranges: a fresh environment holding the plugin
+(from this checkout, with its test extra) and everything else
+at the OLDEST release the declared ranges allow (`uv pip install
+--resolution lowest-direct`), from the index; then the plugin's own tests
+and surface self-check under the strict session. `just test` is the high
+end: the lock resolves the newest releases the ranges allow.
+
+The `standard-aws` starter, whose groups are the plugin's: rendered by the
+installed system's `init-config`, validated and dry-run through every
+lifecycle, with the plugin from this checkout and the system and the AWS
+family from the index (tests/instance/starter, never part of `just test`).
+"""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+PACKAGES = ("okta-opa-plugin",)
+
+
+def say(line: str) -> None:
+    print(f"full-test: {line}", flush=True)
+
+
+def run(cmd: list[str], **kw) -> int:
+    say("$ " + " ".join(cmd))
+    return subprocess.run(cmd, **kw).returncode
+
+
+def low_end() -> bool:
+    with tempfile.TemporaryDirectory(prefix="csis-okta-low-") as td:
+        venv = Path(td) / "venv"
+        env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+        if run(["uv", "venv", "-q", "--python", "3.13", str(venv)], env=env):
+            return False
+        py = str(venv / "bin" / "python")
+        reqs = [f"{ROOT / 'packages' / p}[test]" for p in PACKAGES] + ["cs-image-system-system[testing]>=0.1.11,<0.2"]
+        if run(["uv", "pip", "install", "-q", "--python", py, "--resolution", "lowest-direct", *reqs], env=env):
+            return False
+        run(["uv", "pip", "list", "--python", py], env=env)
+        tests = [str(ROOT / "packages" / p / "tests") for p in PACKAGES]
+        return run([py, "-m", "pytest", "-q", "-p", "no:cacheprovider", "-c", str(ROOT / "pyproject.toml"),
+                    "--rootdir", str(ROOT), *tests], env=env, cwd=ROOT) == 0
+
+
+def standard_aws() -> bool:
+    env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    return run(["uv", "run", "--no-sync", "pytest", "-q", "-p", "no:cacheprovider",
+                "-p", "cs_image_system.system.testing.strict", str(ROOT / "tests" / "instance" / "starter")], env=env, cwd=ROOT) == 0
+
+
+LEGS = (("the low end of the SDK ranges: the plugin's own tests and self-check", low_end),
+        ("the standard-aws starter rendered, validated and dry-run", standard_aws))
+
+
+def main() -> int:
+    failed = []
+    for name, leg in LEGS:
+        say(f"{name} ...")
+        ok = leg()
+        say(f"{name}: {'passed' if ok else 'FAILED'}")
+        if not ok:
+            failed.append(name)
+    say("passed" if not failed else "FAILED: " + "; ".join(failed))
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

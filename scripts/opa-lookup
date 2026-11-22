@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+# SPDX-FileCopyrightText: 2026 Mykel Alvis <mykelalvis@infrastructurebuilder.org>
+#
+# SPDX-License-Identifier: Apache-2.0
+
+"""A read-only lookup against an OPA team, for CI's dispatched `lookup` job.
+
+It obtains a service token with the team's API key pair and lists the team's
+resource groups, then says how many there are. It changes nothing, and it
+never prints a credential, a token or a group's name. The team and the org
+come from OPA_TEAM and OPA_ORG (names, not secrets); the key pair from
+OKTAPAM_KEY and OKTAPAM_SECRET, or the team's TF_VAR_<team>_key and _secret.
+
+Exit 0 when the team answered, 1 when it could not be asked or the key pair is
+missing (said by name).
+"""
+from __future__ import annotations
+
+import os
+import sys
+
+from cs_image_system.okta_opa_plugin.opa_gids import OpaGidResolver, credentials_from_env
+
+
+def main() -> int:
+    team, org = os.environ.get("OPA_TEAM", ""), os.environ.get("OPA_ORG", "")
+    if not team or not org:
+        print("opa-lookup: OPA_TEAM and OPA_ORG must name the team and its org", flush=True)
+        return 1
+    try:
+        key, secret = credentials_from_env(team)
+    except ValueError as e:
+        print(f"opa-lookup: {e}", flush=True)
+        return 1
+    groups = OpaGidResolver(f"https://{org}.pam.okta.com", team, key, secret).resource_groups()
+    if groups is None:
+        print(f"opa-lookup: team {team!r} could not be asked (credentials or network)", flush=True)
+        return 1
+    print(f"opa-lookup: team {team!r} answered: {len(groups)} resource group(s); nothing was changed", flush=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
