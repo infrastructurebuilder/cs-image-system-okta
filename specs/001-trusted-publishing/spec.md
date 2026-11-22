@@ -6,7 +6,7 @@
 
 **Created**: 2026-11-22
 
-**Status**: In progress (built; the indexes' trust and the first publish are the operator's)
+**Status**: Complete 2026-11-22 (0.2.0 published by it to TestPyPI and PyPI; converged)
 
 **Input**: User description: "There's no publish token for pypi. Tell me how to make a trusted publisher (b). Make sure this is documented in case someone forks this repo. Make the okta plugin into a speckit-enabled project and write the publish thing above as a spec that's basically already done. Don't do this in a different branch."
 
