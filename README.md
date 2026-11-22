@@ -81,20 +81,28 @@ against the OPA team, run by hand, with the team's key pair as secrets.
 ## Releasing
 
 ```sh
-just release <part> [test|pypi]
+just release <part> pypi            # full-test, then a commit and the tag v<version>
+git push origin HEAD v<version>     # the tag's push publishes it
 ```
 
-`<part>` is `major`, `minor`, `patch` or an explicit version; the index is
-`test` (TestPyPI, the default) or `pypi`. The release moves the plugin's
-number, runs `full-test`, builds, refuses any version the index ever held
-for the plugin (every 0.1.x, released from cs-image-system-3, among them),
-publishes, then commits and tags `v<version>`. `yes` as a third argument
-is the dry form: the plan, with nothing changed.
+`<part>` is `major`, `minor`, `patch` or an explicit version. The release
+moves the plugin's number, refuses any version either index ever held for
+the plugin (every 0.1.x, released from cs-image-system-3, among them), runs
+`full-test`, builds, then commits and tags `v<version>`. `yes` as a third
+argument is the dry form: the plan, with nothing changed.
+
+Pushing the tag publishes the release: the `Publish` workflow uploads it to
+TestPyPI and then, for a final version, PyPI, by trusted publishing, so no
+upload token is stored anywhere. [docs/RELEASING.md](docs/RELEASING.md) says
+how that trust is set up on each index and in the repository, and what a
+fork must change to publish under a name of its own.
 
 ## Documents
 
 - [docs/CONFIGURATION.md](docs/CONFIGURATION.md): the fields of the Okta
   group and user builders, the one source for them.
+- [docs/RELEASING.md](docs/RELEASING.md): how a release is cut and
+  published, setting up trusted publishing, and releasing a fork.
 - The [plugin's README](packages/okta-opa-plugin/README.md): the plugin
   in depth, from what it registers to how it fails.
 - The system's documents for everything else: the
