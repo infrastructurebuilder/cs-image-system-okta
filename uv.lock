@@ -614,7 +614,7 @@ wheels = [
 
 [[package]]
 name = "cs-image-system-okta-opa-plugin"
-version = "0.2.0"
+version = "0.2.1"
 source = { editable = "packages/okta-opa-plugin" }
 dependencies = [
     { name = "cryptography" },
@@ -646,7 +646,7 @@ provides-extras = ["test"]
 
 [[package]]
 name = "cs-image-system-okta-workspace"
-version = "0.2.0"
+version = "0.2.1"
 source = { virtual = "." }
 
 [package.dev-dependencies]
