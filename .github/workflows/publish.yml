@@ -13,8 +13,10 @@ name: Publish
 #
 # TestPyPI first, always; then PyPI, for a final version (one with no
 # `.dev`, `a`, `b` or `rc` part). A file an index already holds is skipped
-# (`--check-url`), so a version the operator uploaded by hand, or a rerun after
-# a partial failure, is checked rather than uploaded twice.
+# (`uv publish --index` checks the index it publishes to), so a version the
+# operator uploaded by hand, or a rerun after a partial failure, is checked
+# rather than uploaded twice. tests/tooling/test_publish_commands_parse.py holds
+# every `uv publish` line here to one uv accepts.
 on:
   push:
     tags: ["v*"]
@@ -69,7 +71,7 @@ jobs:
           path: dist/
 
       - name: Publish to TestPyPI
-        run: uv publish --trusted-publishing always --index testpypi --check-url https://test.pypi.org/simple/ dist/*
+        run: uv publish --trusted-publishing always --index testpypi dist/*
 
   pypi:
     needs: [build, testpypi]
@@ -90,4 +92,4 @@ jobs:
           path: dist/
 
       - name: Publish to PyPI
-        run: uv publish --trusted-publishing always --index pypi --check-url https://pypi.org/simple/ dist/*
+        run: uv publish --trusted-publishing always --index pypi dist/*
