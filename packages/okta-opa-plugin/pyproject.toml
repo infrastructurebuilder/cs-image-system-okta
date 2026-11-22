@@ -12,7 +12,7 @@ license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
-    "cs-image-system-contract>=0.5,<0.6",
+    "cs-image-system-contract>=0.5,<0.7",   # 0.6 adds only members the plugin does not use (cs-image-system-3 spec 010)
     # the SDK by range: the plugin is released from its own repository (spec 008)
     "cs-image-system-base>=0.2,<0.3",
     "cs-image-system-hashicorp-utils>=0.2,<0.3",
