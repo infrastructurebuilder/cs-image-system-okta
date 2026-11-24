@@ -7,11 +7,14 @@
 
 A release is published one of two ways. The usual one is trusted publishing:
 this script tags the version, the operator pushes the tag, and the `Publish`
-workflow (.github/workflows/publish.yml) uploads it to TestPyPI and then, for a
-final version, PyPI, with no token anywhere (docs/RELEASING.md). With an
-upload token in the environment (UV_PUBLISH_TOKEN, or TEST_PYPI_TOKEN /
-PYPI_TOKEN for the index named), this script uploads to that index itself
+workflow (.github/workflows/publish.yml) uploads it to TestPyPI, with no token
+anywhere (docs/RELEASING.md). With an upload token in the environment
+(UV_PUBLISH_TOKEN, or TEST_PYPI_TOKEN), this script uploads to TestPyPI itself
 first; the workflow then finds those files there and skips them.
+
+Until 1.0 a release goes to TestPyPI alone, by the operator's standing
+decision (cs-image-system-3 specification 013): `pypi` is refused, naming it,
+with exit 2, before anything is asked or changed.
 
 One distribution, cs-image-system-okta-opa-plugin, on its own line from
 0.2.0 (its 0.1.x were released from cs-image-system-3). In order, and
@@ -53,6 +56,14 @@ VERSION = re.compile(r"^\d+\.\d+\.\d+$")
 
 class Refused(Exception):
     """A probe said no; nothing was changed."""
+
+
+class Declined(Refused):
+    """The standing decision says no (exit 2); nothing was changed."""
+
+
+DECISION = ("PyPI is refused by the standing decision, TestPyPI until 1.0 (the operator's to lift): a release "
+            "goes to TestPyPI alone, published by its tag's push -- nothing was changed")
 
 
 def say(line: str) -> None:
@@ -103,8 +114,10 @@ def new_version(part: str) -> str:
 
 
 def release(part: str, index: str, dry: bool) -> int:
+    if index == "pypi":
+        raise Declined(DECISION)
     if index not in INDEXES:
-        raise Refused(f"the index is `test` or `pypi`, not {index!r}")
+        raise Refused(f"the index is `test`, not {index!r} (and `pypi` is refused until 1.0)")
     if not dry:
         # a change to a tracked file, or anything untracked inside a package (a build would take it), refuses;
         # an untracked file outside the packages (an editor's or an agent's own) is no part of a release
@@ -117,7 +130,7 @@ def release(part: str, index: str, dry: bool) -> int:
     version = new_version(part)
     if sh("git", "tag", "--list", f"v{version}", capture=True).stdout.strip():
         raise Refused(f"v{version} is already tagged here -- a version is never cut twice; nothing was changed")
-    for each in INDEXES:      # the tag's push publishes to both, so a version either ever held is refused
+    for each in INDEXES:      # a version PyPI held before 1.0's decision is refused as well as TestPyPI's own
         already = held(version, each)
         if already:
             raise Refused(f"{each} already lists {version} for {', '.join(already)} -- an index never takes a second "
@@ -160,7 +173,7 @@ def release(part: str, index: str, dry: bool) -> int:
     else:
         say(f"{version} passed full-test and is committed and tagged v{version}; nothing was uploaded from here. "
             f"Push it to publish: git push origin HEAD v{version} (the Publish workflow uploads it by trusted "
-            "publishing: TestPyPI, then PyPI for a final version)")
+            "publishing, to TestPyPI alone until 1.0)")
     return 0
 
 
@@ -168,6 +181,9 @@ def main(argv: list[str]) -> int:
     part, index, dry = (argv + ["", "test", "no"])[:3]
     try:
         return release(part, index, dry == "yes")
+    except Declined as e:
+        say(str(e))
+        return 2
     except Refused as e:
         say(str(e))
         return 1

@@ -50,6 +50,13 @@ instance = [
     "cs-image-system-tf-s3-state-plugin>=0.1.11,<0.3",
 ]
 
+# the names of the system reached only through another (`cs-image-system-system` takes the
+# engine), named here so the TestPyPI source under [tool.uv.sources] applies to them too;
+# by the range of the system's line, and never installed for themselves
+index-pins = [
+    "cs-image-system-engine>=0.1.11,<0.2",
+]
+
 [tool.uv]
 package = false
 default-groups = ["dev", "instance"]
@@ -59,9 +66,30 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 cs-image-system-okta-opa-plugin = { workspace = true }
+# Every name of the system this workspace reaches comes from TestPyPI, where every release
+# goes until 1.0 (cs-image-system-3 specification 013), and only those: every third-party
+# name comes from PyPI, since TestPyPI also holds stale or foreign copies of common names
+# (tests/test_index_pins.py holds the lock to it). A source applies to a direct dependency
+# alone, so a name reached only through another is named in the `index-pins` group.
+cs-image-system-ansible-plugin = { index = "testpypi" }
+cs-image-system-aws-runtime-plugin = { index = "testpypi" }
+cs-image-system-base = { index = "testpypi" }
+cs-image-system-bash-mod-plugin = { index = "testpypi" }
+cs-image-system-contract = { index = "testpypi" }
+cs-image-system-default-os-plugin = { index = "testpypi" }
+cs-image-system-engine = { index = "testpypi" }
+cs-image-system-hashicorp-utils = { index = "testpypi" }
+cs-image-system-local-state-plugin = { index = "testpypi" }
+cs-image-system-packer-plugin = { index = "testpypi" }
+cs-image-system-posix-identity-plugin = { index = "testpypi" }
+cs-image-system-system = { index = "testpypi" }
+cs-image-system-tf-ebs-instance-plugin = { index = "testpypi" }
+cs-image-system-tf-s3-state-plugin = { index = "testpypi" }
+cs-image-system-tofu-roots = { index = "testpypi" }
 
-# The indexes a release is published to: `uv publish --index <name>`. Both are
-# explicit, so neither takes part in resolving this workspace's dependencies.
+# The indexes: `testpypi` serves the system's names above and takes every release
+# (`uv publish --index testpypi`); `pypi` takes none until 1.0. Both are explicit, so
+# neither serves a name the sources above do not give it.
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"

@@ -4,7 +4,7 @@ A release of `cs-image-system-okta-opa-plugin` takes two commands and no
 secret:
 
 ```sh
-just release <part|version> pypi    # full-test, then a commit and the tag v<version>
+just release <part|version>         # full-test, then a commit and the tag v<version>
 git push origin HEAD v<version>     # the tag's push publishes it
 ```
 
@@ -12,7 +12,23 @@ The first runs on the operator's machine. It checks that the version is new
 on both indexes, runs `just full-test`, builds, commits if anything changed,
 and tags. The second hands the tag to GitHub, and the `Publish` workflow
 ([.github/workflows/publish.yml](../.github/workflows/publish.yml)) uploads
-the build to TestPyPI and then, for a final version, to PyPI.
+the build to TestPyPI.
+
+**Until 1.0 every release goes to TestPyPI alone**, by the operator's
+standing decision (cs-image-system-3 specification 013): `just release`
+refuses `pypi` with exit 2, the `Publish` workflow has no PyPI job, and
+PyPI keeps its last versions. The PyPI publisher and environment below
+stay set up for 1.0.
+
+The decision is lifted at 1.0 by one named change here, reviewed as
+one: `scripts/release` gives up its refusal of `pypi` (`Declined`);
+`.github/workflows/publish.yml` gains a `pypi` job after its
+`testpypi` job, in the `pypi` environment; and the system's names go
+back to PyPI, the `testpypi` sources in `pyproject.toml`'s
+`[tool.uv.sources]` and the `index-pins` group removed, then
+`uv lock` (`tests/tooling/test_index_pins.py` goes with them). The
+system's operations guide says the same for all three repositories
+([OPERATIONS.md, "Releasing until 1.0"](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md#releasing-until-10)).
 
 No upload token is involved. The workflow uses **trusted publishing**: each
 index has been told to accept uploads for this project from one GitHub
@@ -22,15 +38,15 @@ there is no long-lived token to store, leak or rotate. This page says how
 that trust is set up, so it can be set up again: by a new maintainer, after
 a repository move, or by someone who forks this repository.
 
-`just release 0.2.0 pypi yes` is the dry form: it says what it would do and
+`just release 0.2.0 test yes` is the dry form: it says what it would do and
 changes nothing.
 
 ## How the release decides where to upload
 
 - **No token in the environment (the usual case):** the script uploads
   nothing. It tags, and the tag's push publishes.
-- **A token in the environment** (`UV_PUBLISH_TOKEN`, or `PYPI_TOKEN` /
-  `TEST_PYPI_TOKEN` for the index named): the script uploads to the index
+- **A token in the environment** (`UV_PUBLISH_TOKEN`, or
+  `TEST_PYPI_TOKEN`): the script uploads to the index
   named itself, before tagging. The workflow still runs on the tag's push,
   finds those files already on the index and skips them (`uv publish
   --index` checks the index it publishes to), and uploads only what is
@@ -119,8 +135,8 @@ Push a tag for a version that is new on both indexes, then watch the run:
 GH_PAGER=cat gh run list --repo infrastructurebuilder/cs-image-system-okta --workflow publish.yml --limit 1
 ```
 
-The `testpypi` job publishes first. The `pypi` job runs after it, and only
-for a final version. A job that fails with `invalid-publisher` names the
+The `testpypi` job publishes; until 1.0 there is no `pypi` job.
+A job that fails with `invalid-publisher` names the
 claim the index did not recognise; compare it with the four fields above. A
 repository, workflow file or environment that was renamed needs its
 publisher entry changed to match.
@@ -159,7 +175,7 @@ To release a fork under a name of its own:
    owner, and turns the pending publisher into a normal one.
 4. **Create the `testpypi` and `pypi` environments** in your repository, as
    in step 3 above.
-5. **Release**: `just release <version> pypi`, then push the tag.
+5. **Release**: `just release <version>`, then push the tag.
 
 If you would rather upload with a token than set up trusted publishing,
 export it as `UV_PUBLISH_TOKEN` (or `PYPI_TOKEN` / `TEST_PYPI_TOKEN`) when you

@@ -11,8 +11,8 @@ name: Publish
 # secrets. docs/RELEASING.md says how the trust is set up, on both indexes and
 # in the repository's environments, and what a fork must change.
 #
-# TestPyPI first, always; then PyPI, for a final version (one with no
-# `.dev`, `a`, `b` or `rc` part). A file an index already holds is skipped
+# TestPyPI only, for every version, until 1.0 (cs-image-system-3 specification
+# 013): nothing here uploads to PyPI. A file the index already holds is skipped
 # (`uv publish --index` checks the index it publishes to), so a version the
 # operator uploaded by hand, or a rerun after a partial failure, is checked
 # rather than uploaded twice. tests/tooling/test_publish_commands_parse.py holds
@@ -26,8 +26,6 @@ jobs:
     # only the repository the indexes trust publishes; a fork names its own here (docs/RELEASING.md)
     if: github.repository == 'infrastructurebuilder/cs-image-system-okta'
     runs-on: ubuntu-24.04
-    outputs:
-      final: ${{ steps.version.outputs.final }}
     steps:
       - uses: actions/checkout@v5
 
@@ -37,13 +35,10 @@ jobs:
           python-version: "3.13"
 
       - name: The tag is the plugin's version
-        id: version
         run: |
           version=$(sed -n 's/^version = "\(.*\)"$/\1/p' packages/okta-opa-plugin/pyproject.toml | head -1)
           [ "v$version" = "$GITHUB_REF_NAME" ] || { echo "publish: the tag $GITHUB_REF_NAME is not the plugin's version ($version)"; exit 1; }
-          case "$version" in *dev*|*a*|*b*|*rc*) final=false ;; *) final=true ;; esac
-          echo "publish: $version (final: $final)"
-          echo "final=$final" >> "$GITHUB_OUTPUT"
+          echo "publish: $version, to TestPyPI"
 
       - name: Build
         run: uv build --all-packages
@@ -72,24 +67,3 @@ jobs:
 
       - name: Publish to TestPyPI
         run: uv publish --trusted-publishing always --index testpypi dist/*
-
-  pypi:
-    needs: [build, testpypi]
-    if: needs.build.outputs.final == 'true'
-    runs-on: ubuntu-24.04
-    environment: pypi
-    permissions:
-      id-token: write          # the OIDC token PyPI's trusted publisher checks
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - uses: actions/download-artifact@v8
-        with:
-          name: dist
-          path: dist/
-
-      - name: Publish to PyPI
-        run: uv publish --trusted-publishing always --index pypi dist/*
