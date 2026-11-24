@@ -20,6 +20,16 @@ refuses `pypi` with exit 2, the `Publish` workflow has no PyPI job, and
 PyPI keeps its last versions. The PyPI publisher and environment below
 stay set up for 1.0.
 
+The decision is lifted at 1.0 by one named change here, reviewed as
+one: `scripts/release` gives up its refusal of `pypi` (`Declined`);
+`.github/workflows/publish.yml` gains a `pypi` job after its
+`testpypi` job, in the `pypi` environment; and the system's names go
+back to PyPI, the `testpypi` sources in `pyproject.toml`'s
+`[tool.uv.sources]` and the `index-pins` group removed, then
+`uv lock` (`tests/tooling/test_index_pins.py` goes with them). The
+system's operations guide says the same for all three repositories
+([OPERATIONS.md, "Releasing until 1.0"](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md#releasing-until-10)).
+
 No upload token is involved. The workflow uses **trusted publishing**: each
 index has been told to accept uploads for this project from one GitHub
 repository, one workflow file and one GitHub environment. The workflow proves
