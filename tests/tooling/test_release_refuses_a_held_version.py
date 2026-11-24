@@ -59,8 +59,8 @@ def test_an_index_that_cannot_be_asked_refuses_rather_than_guess():
 
 
 def test_a_version_either_index_ever_held_refuses_the_release(monkeypatch):
-    """The tag's push publishes to TestPyPI and PyPI, so a version either index
-    ever listed is refused before anything changes, whichever index is named."""
+    """A version either index ever listed is refused before anything changes
+    (PyPI's from before 1.0's decision among them)."""
     release = _release()
     listed = {"pypi": {"cs-image-system-okta-opa-plugin": ["0.1.12"]},
               "test": {"cs-image-system-okta-opa-plugin": ["0.1.12", "0.2.0"]}}
@@ -71,7 +71,7 @@ def test_a_version_either_index_ever_held_refuses_the_release(monkeypatch):
     monkeypatch.delenv("UV_PUBLISH_TOKEN", raising=False)
     monkeypatch.delenv("PYPI_TOKEN", raising=False)
     with pytest.raises(release.Refused, match="test already lists 0.2.0"):
-        release.release("0.2.0", "pypi", dry=True)
+        release.release("0.2.0", "test", dry=True)
 
 
 def test_without_a_token_the_dry_form_plans_the_tag_and_no_upload(monkeypatch, capsys):
@@ -81,6 +81,20 @@ def test_without_a_token_the_dry_form_plans_the_tag_and_no_upload(monkeypatch, c
                                                                             else "", "returncode": 0})())
     for name in ("UV_PUBLISH_TOKEN", "PYPI_TOKEN", "TEST_PYPI_TOKEN"):
         monkeypatch.delenv(name, raising=False)
-    assert release.release("0.2.0", "pypi", dry=True) == 0
+    assert release.release("0.2.0", "test", dry=True) == 0
     said = capsys.readouterr().out
     assert "published by the tag's push" in said and "uv publish" not in said and "tag v0.2.0" in said
+
+
+def test_pypi_is_refused_naming_the_decision_before_anything_is_asked(monkeypatch, capsys):
+    """Until 1.0 a release goes to TestPyPI alone (cs-image-system-3 specification 013)."""
+    release = _release()
+
+    def nothing(*a, **kw):
+        raise AssertionError("asked or changed something")
+    monkeypatch.setattr(release, "held", nothing)
+    monkeypatch.setattr(release, "sh", nothing)
+    for dry in ("yes", "no"):
+        assert release.main(["patch", "pypi", dry]) == 2
+        said = capsys.readouterr().out
+        assert "PyPI is refused by the standing decision, TestPyPI until 1.0" in said and "nothing was changed" in said
