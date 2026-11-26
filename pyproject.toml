@@ -69,7 +69,7 @@ cs-image-system-okta-opa-plugin = { workspace = true }
 # Every name of the system this workspace reaches comes from TestPyPI, where every release
 # goes until 1.0 (cs-image-system-3 specification 013), and only those: every third-party
 # name comes from PyPI, since TestPyPI also holds stale or foreign copies of common names
-# (tests/test_index_pins.py holds the lock to it). A source applies to a direct dependency
+# (tests/tooling/test_index_pins.py holds the lock to it). A source applies to a direct dependency
 # alone, so a name reached only through another is named in the `index-pins` group.
 cs-image-system-ansible-plugin = { index = "testpypi" }
 cs-image-system-aws-runtime-plugin = { index = "testpypi" }
