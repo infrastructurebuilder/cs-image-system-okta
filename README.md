@@ -30,7 +30,10 @@ beside the extras of the tree's runtimes:
 uv tool install 'cs-image-system[okta]'
 ```
 
-The extra names the plugin by a range on its releases. The system's
+In the system's tree the extra names the plugin by a range on its
+releases; each release of the system pins it exactly, at the plugin's
+newest TestPyPI release inside that range, so a new release of the
+plugin reaches an install with the system's next release. The system's
 operations guide states the install once, with every provider's extra:
 [OPERATIONS.md, "Installing a release"](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md#installing-a-release).
 

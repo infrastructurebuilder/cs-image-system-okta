@@ -24,9 +24,11 @@ uv tool install 'cs-image-system[okta]'
 
 The plugin is released from its own repository,
 [infrastructurebuilder/cs-image-system-okta](https://github.com/infrastructurebuilder/cs-image-system-okta),
-from 0.2.0 on (its 0.1.x came out of cs-image-system-3); the `okta` extra
-names it by a range, so a release of the system and a release of the plugin
-need not come together. Installing a release, and choosing extras, is in the
+from 0.2.0 on (its 0.1.x came out of cs-image-system-3). In the system's
+tree the `okta` extra names it by a range, and each release of the system
+pins it exactly at the plugin's newest release inside that range: a release
+of the plugin needs no release of the system to be cut, and reaches an
+install with the system's next one. Installing a release, and choosing extras, is in the
 system's [operations guide](https://github.com/infrastructurebuilder/cs-image-system-3/blob/develop/docs/OPERATIONS.md#installing-a-release).
 
 ## What it registers
